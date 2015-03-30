@@ -1,0 +1,43 @@
+{% extends 'PortfolioUserBundle::layout.html.twig' %}
+
+{% block body %}
+
+	<div class="page-header">
+		<h1>Page de tests</h1>
+	</div>
+
+
+	{# Boucle #}
+	<h3>Test d'une boucle: </h3>
+
+	{% for user in users %}
+    <li>{{ user.name }}</li>
+	{% else %}
+	    No users have been found.
+	{% endfor %}
+
+
+	{# Dates #}
+	<h3>Test de date: </h3>
+	<ul>
+		<li>{{ "now"|date('d/m/Y H:i', timezone="Europe/Paris") }} | Paris</li>
+		<li>{{ "now"|date('d/m/Y H:i', timezone="UTC") }} | UTC</li>
+	</ul>
+
+
+	{# Lettre en majuscule #}
+	<h3>Tests de majuscules/minuscules: </h3>
+	<p>{{ "capitalize"|capitalize }} {{ "LOWER"|lower }} {{ "upper"|upper }} </p>
+
+
+	{# Comparaisons #}
+	{% if 'Fabien' starts with 'F' %}
+		<p>'Fabien' commence avec un 'F'</p>
+	{% endif %}
+
+	{% if 'Fabien' ends with 'n' %}
+		<p>'Fabien' termine avec un 'n'</p>
+	{% endif %}
+
+
+{% endblock %}
