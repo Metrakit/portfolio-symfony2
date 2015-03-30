@@ -15,7 +15,10 @@ var gulp            = require('gulp'),
     notify          = require("gulp-notify"),
     plumber         = require('gulp-plumber'),
     jshint          = require('gulp-jshint'),
-    stylish         = require('jshint-stylish');
+    stylish         = require('jshint-stylish'),
+    crypto          = require('crypto'),
+    jsonTransform   = require('gulp-json-transform'),
+    clean           = require('gulp-clean');
 //uncss               = require('gulp-uncss');
 
 var options         = minimist(process.argv.slice(2)),
@@ -30,7 +33,15 @@ gulp.task('browser-sync', function() {
 
 gulp.task('sass', function() {
 
-    return gulp.src(['bower_components/**/*.min.css', 'assets/sass/*.scss'])
+    var token = crypto.randomBytes(5).toString('hex');
+
+    if (options.env == "prod") {
+        var cssFile = 'main.' + token + '.min.css';
+    } else {
+        var cssFile = 'main.min.css';
+    }
+
+    gulp.src(['bower_components/**/*.min.css', 'assets/sass/*.scss'])
         .pipe(gulpif(options.env != "prod", sourcemaps.init()))
         .pipe(sass({
             errLogToConsole: false,
@@ -38,7 +49,7 @@ gulp.task('sass', function() {
                 return notify().write(err);
             }
         }))
-        .pipe(concat('main.min.css'))
+        .pipe(concat(cssFile))
         .pipe(minifyCSS())
         .pipe(gulpif(options.env != "prod", sourcemaps.write('maps')))
         //.pipe(gulpif(options.env != "prod", uncss({
@@ -46,6 +57,23 @@ gulp.task('sass', function() {
         //})))
         .pipe(gulp.dest('web/css')) 
         .pipe(reload({stream:true}));
+
+    gulp.src('web/css/*.css', {read: false})
+        .pipe(clean());  
+
+    if (options.env != "prod") {
+        gulp.src('web/css/maps/*.map', {read: false})
+            .pipe(clean());    
+    }
+            
+    gulp.src('app/config/assets.json')
+        .pipe(jsonTransform(function(data) {
+            return {
+                css: cssFile,
+                js: data.js,
+            };
+        }))
+        .pipe(gulp.dest('app/config'));
 
 });
 
@@ -57,12 +85,32 @@ gulp.task('js', function() {
         .pipe(jshint.reporter('jshint-stylish'))
         .on('error', notify.onError({ message: 'JS hint fail'}));   
 
-    return gulp.src(['bower_components/**/*.min.js', 'assets/js/*.js'])
+    var token = crypto.randomBytes(5).toString('hex');
+
+    gulp.src(['bower_components/**/*.min.js', 'assets/js/*.js'])
         .pipe(gulpif(options.env != "prod", sourcemaps.init()))
-        .pipe(concat('main.min.js'))
+        .pipe(concat('main.' + token + '.min.js'))
         .pipe(gulpif(options.env == "prod", uglify()))
         .pipe(gulpif(options.env != "prod", sourcemaps.write('maps')))
         .pipe(gulp.dest('web/js'));   
+
+    gulp.src('web/js/*.js', {read: false})
+        .pipe(clean());    
+
+    if (options.env != "prod") {
+        gulp.src('web/js/maps/*.map', {read: false})
+            .pipe(clean());    
+    }         
+
+    gulp.src('app/config/assets.json')
+        .pipe(jsonTransform(function(data) {
+            return {
+                css: data.css,
+                js: 'main.' + token + '.min.js'
+            };
+        }))
+        .pipe(gulp.dest('app/config'));
+
 
 });
 
@@ -77,4 +125,4 @@ gulp.task('watch', ['js', 'sass'], function() {
     gulp.watch("**/*.html.twig").on("change", browserSync.reload);
 });
 
-gulp.task('default', ['sass', 'js', 'fonts', 'watch', 'browser-sync']);
+gulp.task('default', ['sass', 'fonts', 'js', 'watch', 'browser-sync']);
