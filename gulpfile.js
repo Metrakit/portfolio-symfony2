@@ -1,10 +1,15 @@
-var gulp   = require('gulp'); 
-var sass   = require('gulp-sass');
-var concat = require('gulp-concat');
-var uglify = require('gulp-uglify');
-var browserSync = require('browser-sync');
+var gulp            = require('gulp'),
+    sass            = require('gulp-sass'),
+    concat          = require('gulp-concat'),
+    uglify          = require('gulp-uglify'),
+    browserSync     = require('browser-sync'),
+    sourcemaps      = require('gulp-sourcemaps'),
+    minimist        = require('minimist'),
+    gulpif          = require('gulp-if');
+//uncss               = require('gulp-uncss');
 
-var reload = browserSync.reload;
+var options         = minimist(process.argv.slice(2)),
+    reload          = browserSync.reload;
 
 gulp.task('browser-sync', function() {
     browserSync({
@@ -13,17 +18,24 @@ gulp.task('browser-sync', function() {
 });
 
 gulp.task('sass', function() {
-    return gulp.src(['assets/scss/*.scss', 'bower_components/**/*.min.css'])
+    return gulp.src(['bower_components/**/*.min.css', 'assets/sass/*.scss'])
+        .pipe(sourcemaps.init())
         .pipe(sass())
         .pipe(concat('main.min.css'))
-        .pipe(gulp.dest('web/css'))
+        .pipe(gulpif(options.env != "prod", sourcemaps.write('maps')))
+        //.pipe(uncss({
+        //    html: ['**/*.html.twig', 'http://www.projec.dev']
+        //}))
+        .pipe(gulp.dest('web/css')) 
         .pipe(reload({stream:true}));
 });
 
 gulp.task('js', function() {
-    return gulp.src(['assets/js/*.js', 'bower_components/**/*.min.js'])
+    return gulp.src(['bower_components/**/*.min.js', 'assets/js/*.js'])
+        .pipe(sourcemaps.init())
         .pipe(concat('main.min.js'))
         .pipe(uglify())
+        .pipe(sourcemaps.write('maps'))
         .pipe(gulp.dest('web/js'));
 });
 
@@ -32,7 +44,7 @@ gulp.task('fonts', function() {
             .pipe(gulp.dest('web/fonts'));
 });
 
-gulp.task('watch', function() {
+gulp.task('watch', ['js', 'sass'], function() {
     gulp.watch('assets/js/*.js', ['js', browserSync.reload]);
     gulp.watch('assets/sass/*.scss', ['sass']);
     gulp.watch("**/*.html.twig").on("change", browserSync.reload);

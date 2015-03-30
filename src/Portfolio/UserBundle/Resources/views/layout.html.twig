@@ -1,16 +1,43 @@
 <!DOCTYPE html>
-<html>
-    <head>
+<html lang="fr">
+  <head>
         <meta charset="UTF-8" />
         <title>{% block title %}Welcome!{% endblock %}</title>
         {% block stylesheets %}{% endblock %}
         <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
         <link rel="stylesheet" href="{{ asset('css/main.min.css') }}"/>
+  </head>
 
-    </head>
-    <body>
+  <body>
+
+    <div class="container">
+
+        <header>
+            <h3 class="text-muted">Portfolio</h3>
+            <nav>
+              <ul class="nav nav-justified">
+                <li {% if app.request.attributes.get('_route') == "portfolio_user_homepage" %} class="active" {% endif %} >
+                    <a href="{{ path('portfolio_user_homepage') }}">Home</a>
+                </li>
+                <li {% if app.request.attributes.get('_route') == "portfolio_user_test" %} class="active" {% endif %} >
+                    <a href="{{ path('portfolio_user_test') }}">Tests</a>
+                </li>
+              </ul>
+            </nav>
+        </header>
+
         {% block body %}{% endblock %}
+
+        <!-- Site footer -->
+        <footer class="footer">
+            <p>&copy; Jordane Corporation - 2015</p>
+        </footer>
+
+        
         {% block javascripts %}{% endblock %}
         <script src="{{ asset('js/main.min.js') }}"></script>
-    </body>
+
+    </div>
+
+  </body>
 </html>

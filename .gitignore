@@ -3,3 +3,5 @@ vendor
 .vagrant
 node_modules
 bower_components
+web/js/maps
+web/css/maps
